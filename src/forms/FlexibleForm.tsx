@@ -179,12 +179,13 @@ const Button = styled.button<{$colorstyle: string}>`
 interface Props {
     inputData: object,
     schema: z.ZodObject<object>,
+    dataHandler: (o: object) => Promise<object>,
     direction: "horizontal" | "vertical",
     colorstyle: "aquamarine" | "orange" | "lily"
 }
 
 
-export default function FlexibleForm({inputData, schema, direction, colorstyle}: Props) {
+export default function FlexibleForm({inputData, schema, dataHandler, direction, colorstyle}: Props) {
 
     type FormFields = z.infer<typeof schema>;
     
@@ -199,11 +200,10 @@ export default function FlexibleForm({inputData, schema, direction, colorstyle}:
     
     const onSubmit: SubmitHandler<FormFields> = async (data) => {
         try {
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            console.log(data);
-            throw new Error();
-        } catch {
-            setError("root", {message: "! This e-mail is already taken"})
+            console.log("data from form:", data);
+            await dataHandler(data);
+        } catch (error) {
+            setError("root", {message: error.response.data.message})
         }
     };
     
@@ -244,7 +244,7 @@ export default function FlexibleForm({inputData, schema, direction, colorstyle}:
 
             {properties.map((prop, index) => 
 
-                typeof inputData[prop] !== "object" ?       // in the case of a <select> the prop holds an array...
+                typeof inputData[prop] !== "object" ?       // if it is a <select> the prop holds an array (2nd version)...
                 <>
                     <Label $index={index} $colorstyle={colorstyle} htmlFor={prop} key={"L"+index}>{prop}:</Label>
                     <Input
